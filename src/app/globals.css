@@ -1,0 +1,634 @@
+@import "tailwindcss" source(none);
+
+/*
+  Auto source detection would also scrape the markdown notes and other files in
+  the repo, leaking example class names into the build, so scan the app only.
+*/
+@source "..";
+
+/*
+  Legacy breakpoints are inclusive (`@media (max-width: 680px)`) while Tailwind
+  v4's `max-[680px]` compiles to `(width < 680px)`, so at exactly 680 the two
+  apps disagree. These variants reproduce the original semantics one-to-one;
+  use them instead of `max-[…]` everywhere a legacy rule is being mirrored.
+
+  Declaration order is the cascade order here, so the widest breakpoint comes
+  first — that reproduces how the legacy sheets stack their @media blocks and
+  lets `max-680px:min-h-[760px]` still override `max-1000px:min-h-[900px]`.
+*/
+@custom-variant max-1000px {
+  @media (max-width: 1000px) {
+    @slot;
+  }
+}
+@custom-variant max-900px {
+  @media (max-width: 900px) {
+    @slot;
+  }
+}
+@custom-variant max-680px {
+  @media (max-width: 680px) {
+    @slot;
+  }
+}
+@custom-variant max-560px {
+  @media (max-width: 560px) {
+    @slot;
+  }
+}
+@custom-variant max-520px {
+  @media (max-width: 520px) {
+    @slot;
+  }
+}
+@custom-variant max-420px {
+  @media (max-width: 420px) {
+    @slot;
+  }
+}
+
+/*
+  Agriksense design tokens — translated from the legacy stylesheets:
+  css/style.css (landing), css/dashboard.css (dashboards), css/auth.css (auth).
+  The two legacy apps used slightly different values for the same variable name
+  (--line, --green2), so both variants are kept as distinct tokens.
+*/
+@theme {
+  --color-ink: #0b100d;
+  --color-muted: #707a73;
+  --color-green: #0b5b3e;
+  --color-green-deep: #123f2e; /* landing hover */
+  --color-green-dark: #094b34; /* dashboard hover */
+  --color-lime: #d5f17f;
+  --color-lime-soft: #eaf5c9;
+  --color-paper: #f7f8f5; /* landing bg */
+  --color-line: #dfe4de; /* landing hairline */
+  --color-line-soft: #e6ebe5; /* dashboard hairline */
+  --color-night: #080d0a;
+  --color-night-2: #0e1712;
+  --color-night-3: #0b110e;
+  --color-panel: #f7f9f6;
+  --color-sidebar: #fbfcfb;
+  --color-canvas: #f3f5f2;
+
+  /*
+    Inter was referenced by the legacy stylesheets but never loaded, so it only
+    ever resolved on machines that have it installed. Keep that behaviour: DM
+    Sans (next/font) is the real family, Inter stays an optional local fallback.
+  */
+  --font-sans: Inter, var(--font-dm-sans), system-ui, sans-serif; /* landing */
+  --font-dm: var(--font-dm-sans), Inter, system-ui, sans-serif; /* dashboards + auth */
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  /*
+    Most legacy landing rules use the bare `font: 10px ui-monospace` shorthand.
+    Chromium resolves that lone generic keyword to a different face than the
+    full mono stack above, with narrower glyph advances — keep both spellings
+    so each element gets the family list the original actually asked for.
+  */
+  --font-ui-mono: ui-monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-marquee: marquee 30s linear infinite;
+  --animate-flow: flow 3.5s linear infinite;
+  --animate-blink: blink 1.6s infinite;
+
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes flow {
+    from {
+      left: 10%;
+    }
+    to {
+      left: 90%;
+    }
+  }
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 96px;
+  }
+  body {
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    /* Tailwind's preflight sets html{line-height:1.5}; the legacy pages never set
+       line-height at all, so every element resolved to normal. */
+    line-height: normal;
+  }
+  /* Preflight makes headings inherit their weight; legacy headings were UA bold
+     unless a rule overrode them. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 700;
+  }
+  /* The legacy stylesheets never reset margins, so paragraphs and headings kept
+     their UA defaults; preflight zeroes them. Restore the defaults and let the
+     utilities that mirror legacy rules override them. */
+  h1 { font-size: 2em; margin: 0.67em 0; }
+  h2 { font-size: 1.5em; margin: 0.83em 0; }
+  h3 { font-size: 1.17em; margin: 1em 0; }
+  h4 { font-size: 1em; margin: 1.33em 0; }
+  h5 { font-size: 0.83em; margin: 1.67em 0; }
+  h6 { font-size: 0.67em; margin: 2.33em 0; }
+  p { margin: 1em 0; }
+  /* Preflight pins <small> to 80%; legacy never reset it, so it kept the UA
+     keyword `smaller`, which Chromium resolves to 1/1.2 (83.33%). */
+  small {
+    font-size: smaller;
+  }
+  ul,
+  ol,
+  dl,
+  figure,
+  blockquote {
+    margin: 1em 0;
+  }
+  ul,
+  ol {
+    padding-left: 40px;
+  }
+  /* css/dashboard.css opens with `*{margin:0;padding:0}` but css/style.css never
+     reset anything, so the UA defaults above only belong to the marketing pages.
+     Utilities live in a later cascade layer, so this cannot beat them. */
+  .app-shell,
+  .app-shell :where(*) {
+    margin: 0;
+    padding: 0;
+  }
+  :focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Landing content column: width:min(1280px, 100% - 48px) */
+@utility wrap {
+  width: min(1280px, calc(100% - 48px));
+  margin-inline: auto;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  @variant max-680px {
+    width: calc(100% - 30px);
+  }
+  @variant max-420px {
+    width: calc(100% - 24px);
+  }
+}
+
+/*
+  Legacy's toolbar `.select` never sets font-family, so the box keeps Chromium's
+  UA control font — about 2px shorter per line box than the page font that
+  Preflight inherits into every form control.
+*/
+@utility font-ua {
+  font-family: revert;
+}
+
+/* Monospace eyebrow label used across the landing sections */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7b857e;
+}
+
+/* Scroll-reveal (see Reveal.tsx) */
+@utility reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.8s var(--ease-out-expo),
+    transform 0.8s var(--ease-out-expo);
+}
+@utility reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* --- Decorative surfaces that are not expressible as single utilities --- */
+
+/* Hero: layered radial + linear wash over the video/photo */
+@utility hero-image {
+  background:
+    radial-gradient(circle at 78% 25%, rgba(196, 232, 112, 0.18), transparent 23%),
+    linear-gradient(115deg, #06100b 5%, #123b29 56%, #0b1911 100%);
+}
+@utility hero-overlay {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(4, 9, 6, 0.95) 0%,
+      rgba(4, 12, 8, 0.78) 40%,
+      rgba(4, 12, 8, 0.24) 76%,
+      rgba(4, 9, 6, 0.4) 100%
+    ),
+    linear-gradient(0deg, rgba(4, 9, 6, 0.72), transparent 48%);
+}
+@utility hero-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.6) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.6) 1px, transparent 1px);
+  background-size: 90px 90px;
+  mask-image: linear-gradient(90deg, #000, transparent 72%);
+}
+@utility mapbox {
+  background-color: #dbe7d5;
+  background-image:
+    repeating-linear-gradient(28deg, rgba(45, 88, 55, 0.15) 0 2px, transparent 2px 21px),
+    linear-gradient(125deg, #dbe7d5, #edf0df);
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 32%, #315f3e 0 4px, transparent 5px),
+      radial-gradient(circle at 56% 66%, #315f3e 0 4px, transparent 5px),
+      radial-gradient(circle at 76% 27%, #315f3e 0 4px, transparent 5px),
+      radial-gradient(circle at 42% 22%, #315f3e 0 4px, transparent 5px);
+  }
+}
+@utility dotted-canvas {
+  background-color: #edf2ec;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(#85928a 1px, transparent 1px);
+    background-size: 17px 17px;
+    opacity: 0.17;
+  }
+}
+@utility score-line {
+  background: linear-gradient(90deg, var(--color-lime) 69.5%, #26362c 69.5%);
+}
+
+@utility area-fill {
+  background: linear-gradient(180deg, #eaf5c9, #fff);
+  clip-path: polygon(0 70%, 15% 64%, 30% 40%, 45% 36%, 60% 58%, 75% 45%, 100% 72%, 100% 100%, 0 100%);
+}
+@utility plot-stripes {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      28deg,
+      rgba(11, 91, 62, 0.12) 0 2px,
+      transparent 2px 21px
+    );
+  }
+}
+@utility credit-glow {
+  &::before {
+    content: "";
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    right: -250px;
+    top: -260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(213, 241, 127, 0.18), transparent 65%);
+  }
+}
+@utility cta-surface {
+  background:
+    radial-gradient(circle at 80% 20%, rgba(213, 241, 127, 0.12), transparent 27%), #0e1712;
+}
+@utility photo-grade {
+  filter: saturate(0.9) contrast(1.06);
+}
+@utility video-grade {
+  filter: saturate(0.7) contrast(1.1);
+}
+@utility shot-grade {
+  filter: saturate(0.85) contrast(1.05);
+}
+
+/* Thin horizontal scrollbar for table wrappers.
+   `scrollbar-width` must stay unset: in Chromium it takes over from
+   ::-webkit-scrollbar, and the resulting overlay bar claims no layout space,
+   which shifts everything below a wide table up by ~6px. */
+@utility scrollbar-slim {
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #d5dcd5;
+    border-radius: 99px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* Donut / gauge rings driven by CSS variables (--a/--b, --val/--gaug) */
+/*
+  Composite layout scaffolding from css/dashboard.css. These carry the legacy
+  breakpoints (1100 / 900 / 560), so keeping them as named utilities preserves
+  the responsive behaviour instead of repeating max-[…] variants in every page.
+*/
+
+@utility app-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+  @media (max-width: 560px) {
+    display: block;
+  }
+}
+
+@utility app-sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  border-right: 1px solid var(--color-line-soft);
+  background: var(--color-sidebar);
+  padding: 18px 14px;
+  @media (max-width: 900px) {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    width: 240px;
+    transform: translateX(-105%);
+    transition: transform 0.3s var(--ease-out-expo);
+    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.12);
+  }
+}
+@utility app-sidebar-open {
+  transform: none;
+}
+
+@utility app-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+@utility content-pad {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 22px;
+  @media (max-width: 900px) {
+    padding: 16px;
+  }
+  @media (max-width: 560px) {
+    gap: 12px;
+    padding: 14px;
+  }
+}
+
+@utility grid-2 {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 16px;
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@utility grid-3 {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 1.4fr 0.9fr 0.9fr;
+  gap: 16px;
+  @media (max-width: 1100px) {
+    grid-template-columns: 1fr 1fr;
+    & > .span-2 {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@utility span-2 {
+  grid-column: span 2 / span 2;
+}
+
+@utility kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+@utility roster {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@utility clusters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@utility telemetry {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+@utility dev-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 16px 0 6px;
+  & > div {
+    min-width: 70px;
+    flex: 1;
+    border: 1px solid var(--color-line-soft);
+    border-radius: 12px;
+    background: var(--color-panel);
+    padding: 12px;
+    text-align: center;
+  }
+  @media (max-width: 560px) {
+    flex-direction: column;
+    & > div {
+      min-width: 100%;
+    }
+  }
+}
+
+@utility minis {
+  display: grid;
+  margin-top: 6px;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 14px;
+}
+
+@utility rings {
+  position: relative;
+  display: grid;
+  width: 140px;
+  height: 140px;
+  place-items: center;
+  margin: 18px auto;
+  border-radius: 50%;
+  background: conic-gradient(#0b5b3e 0 160deg, #3d6bff 160deg 270deg, #d5f17f 270deg 330deg, #eee 330deg);
+  &::before {
+    content: "";
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    background: #fff;
+  }
+  @media (max-width: 560px) {
+    width: 128px;
+    height: 128px;
+    &::before {
+      width: 84px;
+      height: 84px;
+    }
+  }
+}
+
+@utility form-grid {
+  display: grid;
+  margin-top: 16px;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Landing section rhythm: 150px, then 95px / 75px on smaller screens */
+@utility section-pad {
+  padding-block: 150px;
+  @media (max-width: 680px) {
+    padding-block: 95px;
+  }
+  @media (max-width: 420px) {
+    padding-block: 75px;
+  }
+}
+
+@utility tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  z-index: 6;
+  width: 136px;
+  transform: translateX(-50%);
+  border-radius: 10px;
+  background: #0b110e;
+  padding: 10px 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #fff;
+  pointer-events: none;
+  white-space: normal;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+  &::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    border: 6px solid transparent;
+    border-top-color: #0b110e;
+    transform: translateX(-50%);
+  }
+  @media (max-width: 560px) {
+    width: 118px;
+    font-size: 10px;
+  }
+}
+
+/* --- Auth (css/auth.css) --- */
+@utility auth-input {
+  width: 100%;
+  height: 46px;
+  border: 1.5px solid var(--color-line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0 16px;
+  font-size: 15px;
+  color: var(--color-ink);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  &::placeholder {
+    color: #a0aaa4;
+  }
+  &:focus {
+    border-color: var(--color-green);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(11, 91, 62, 0.08);
+  }
+}
+
+@utility donut {
+  background: conic-gradient(
+    var(--color-green) 0 calc(1% * var(--a)),
+    #d5f17f calc(1% * var(--a)) calc(1% * (var(--a) + var(--b))),
+    #f2cc6d calc(1% * (var(--a) + var(--b))) 100%
+  );
+  &::after {
+    content: "";
+    position: absolute;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: #fff;
+  }
+}
+
