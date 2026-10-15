@@ -97,9 +97,9 @@ export default function LoginForm() {
             <input type="checkbox" name="remember" className={CHECKBOX_INPUT} />
             <span>Remember me</span>
           </label>
-          <a href="#" className={GREEN_LINK}>
+          <Link href="/forgot-password" className={GREEN_LINK}>
             Forgot password?
-          </a>
+          </Link>
         </div>
 
         <button type="submit" className={SUBMIT_BTN} disabled={busy}>
