@@ -13,9 +13,12 @@ import {
   FOOTER_LINK,
   FOOTER_TEXT,
   FORM,
-  GROUP,
   Field,
+  GROUP,
+  GOOGLE_AUTH_PATH,
+  GoogleButton,
   LABEL,
+  OrDivider,
   ROLE_SELECTOR,
   ROLE_TAB_ACTIVE,
   ROLE_TAB_BASE,
@@ -330,6 +333,12 @@ export default function SignupForm() {
         <button type="submit" className={SUBMIT_BTN} disabled={busy}>
           {busy ? "Creating account..." : "Create account"}
         </button>
+
+        <OrDivider />
+        <GoogleButton
+          label="Sign up with Google"
+          href={`${GOOGLE_AUTH_PATH}?role=${role}`}
+        />
       </form>
 
       <div className={FOOTER}>
