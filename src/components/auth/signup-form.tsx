@@ -60,9 +60,18 @@ export default function SignupForm() {
     setError(null);
     setBusy(true);
     try {
-      if (role === "farmer" && !form.querySelector<HTMLInputElement>('input[name="consent"]')?.checked) {
-        setError("Please accept the Farmer Informed Consent terms.");
-        return;
+      if (role === "farmer") {
+        const choice = form.querySelector<HTMLInputElement>('input[name="consent"]:checked')?.value;
+        if (!choice) {
+          setError("Please accept or reject the Farmer Informed Consent terms.");
+          return;
+        }
+        if (choice !== "accept") {
+          setError(
+            "An Agriksense farmer account can't be created without consent. You can change your choice at any time before submitting.",
+          );
+          return;
+        }
       }
       const panel = form.querySelector<HTMLElement>(`[data-role-panel="${role}"]`);
       const read = (selector: string, trim = false): string => {
@@ -91,7 +100,7 @@ export default function SignupForm() {
           password,
           confirmPassword,
           consentAccepted:
-            form.querySelector<HTMLInputElement>('input[name="consent"]')?.checked ?? false,
+            form.querySelector<HTMLInputElement>('input[name="consent"]:checked')?.value === "accept",
         };
       } else if (role === "dco") {
         body = {
@@ -219,10 +228,45 @@ export default function SignupForm() {
             autoComplete="new-password"
           />
           <div className={GROUP}>
-            <label className="flex cursor-pointer items-start gap-2.5 text-[13px] font-semibold tracking-[-0.01em] text-ink">
-              <input type="checkbox" name="consent" className={CHECKBOX_INPUT} />
-              <span>I accept the Farmer Informed Consent terms for data collection and verification.</span>
-            </label>
+            <span className={LABEL}>Farmer Informed Consent</span>
+            <details className="rounded-xl border border-line bg-paper px-4 py-3 text-[13px] leading-relaxed text-ink">
+              <summary className="cursor-pointer font-semibold tracking-[-0.01em]">Read the terms</summary>
+              <div className="mt-3 flex flex-col gap-2.5">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-muted">
+                  Draft — pending legal review
+                </p>
+                <p>
+                  <strong>1. Agricultural research.</strong> Information about you and your farm (crops, soil, location,
+                  photos) may be used, in de-identified form, for agricultural research that improves farming practice.
+                </p>
+                <p>
+                  <strong>2. Machine-learning models.</strong> Farm data may be used to train and improve the models that
+                  power crop health alerts, advisory and your AgriScore.
+                </p>
+                <p>
+                  <strong>3. Product improvement.</strong> Agriksense may use how you use the service to improve its
+                  features and support.
+                </p>
+                <p>
+                  <strong>4. Privacy.</strong> Your personal details (NIN, bank details, phone number) are kept secure and
+                  are never sold. They are shared only with partners you approve, such as a bank assessing a loan.
+                </p>
+                <p>
+                  <strong>5. Voluntary participation.</strong> Taking part is your choice. You may withdraw your consent at
+                  any time without penalty.
+                </p>
+              </div>
+            </details>
+            <div className="mt-1 flex flex-col gap-2">
+              <label className="flex cursor-pointer items-start gap-2.5 text-[13px] font-semibold tracking-[-0.01em] text-ink">
+                <input type="radio" name="consent" value="accept" className={CHECKBOX_INPUT} />
+                <span>I accept the Farmer Informed Consent terms.</span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-2.5 text-[13px] font-semibold tracking-[-0.01em] text-ink">
+                <input type="radio" name="consent" value="reject" className={CHECKBOX_INPUT} />
+                <span>I reject the Farmer Informed Consent terms.</span>
+              </label>
+            </div>
           </div>
         </div>
 
