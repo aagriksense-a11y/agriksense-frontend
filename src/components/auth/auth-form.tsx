@@ -127,3 +127,56 @@ export function AuthHeader({ title, sub }: { title: string; sub: string }) {
     </div>
   );
 }
+
+/** Path the backend team must implement server-side (GET, optional ?role=). */
+export const GOOGLE_AUTH_PATH = "/api/auth/google";
+
+/** Divider between the primary submit action and the Google button. */
+export function OrDivider() {
+  return (
+    <div className="flex items-center gap-3" aria-hidden="true">
+      <span className="h-px flex-1 bg-line" />
+      <span className="text-[12px] text-muted">or</span>
+      <span className="h-px flex-1 bg-line" />
+    </div>
+  );
+}
+
+const GOOGLE_SVG = (
+  <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+    <path
+      fill="#4285F4"
+      d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92a8.78 8.78 0 0 0 2.68-6.62Z"
+    />
+    <path
+      fill="#34A853"
+      d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86a5.4 5.4 0 0 1-5.06-3.72H.96v2.33A9 9 0 0 0 9 18Z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M3.94 10.7a5.41 5.41 0 0 1 0-3.4V4.97H.96a9 9 0 0 0 0 8.06l2.98-2.33Z"
+    />
+    <path
+      fill="#EA4335"
+      d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58A8.98 8.98 0 0 0 9 0 9 9 0 0 0 .96 4.97l2.98 2.33A5.4 5.4 0 0 1 9 3.58Z"
+    />
+  </svg>
+);
+
+/**
+ * Plain <a> link to the server's Google auth endpoint — full-page navigation,
+ * no client fetch. The backend must implement GET /api/auth/google (optionally
+ * reading ?role= to pick the account type to create) and store the session the
+ * same way POST /api/auth/login does before redirecting to /dashboard.
+ */
+export function GoogleButton({ label, href = GOOGLE_AUTH_PATH }: { label: string; href?: string }) {
+  return (
+    <a
+      href={href}
+      className="flex h-12 w-full cursor-pointer items-center justify-center gap-2.5 rounded-[12px] border border-line bg-white text-[15px] font-[650] tracking-[-0.01em] text-ink [font-family:inherit] [transition:background-color_.2s,transform_.2s] hover:-translate-y-0.5 hover:bg-[#f6faf7]"
+    >
+      {GOOGLE_SVG}
+      {label}
+    </a>
+  );
+}

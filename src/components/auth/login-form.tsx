@@ -14,7 +14,10 @@ import {
   FORM,
   FORM_OPTIONS,
   Field,
+  GOOGLE_AUTH_PATH,
+  GoogleButton,
   GREEN_LINK,
+  OrDivider,
   SUBMIT_BTN,
 } from "./auth-form";
 
@@ -102,6 +105,9 @@ export default function LoginForm() {
         <button type="submit" className={SUBMIT_BTN} disabled={busy}>
           {busy ? "Logging in..." : "Log in"}
         </button>
+
+        <OrDivider />
+        <GoogleButton label="Continue with Google" href={GOOGLE_AUTH_PATH} />
       </form>
 
       <div className={FOOTER}>
